@@ -4,6 +4,8 @@
 
 A terminal UI for viewing and editing Steam playtime data stored in `localconfig.vdf`, including added non-steam games.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/boysaremoe)
+
 ## Features
 
 - Browse all games (including non-steam games) with total playtime, 2-week playtime, and last played date

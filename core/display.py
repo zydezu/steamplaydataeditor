@@ -70,7 +70,7 @@ def _label_rich(label: str) -> Text:
     if "[non-steam]" in label:
         name = label[: label.index(" [non-steam]")]
         t = Text(name)
-        t.append(" (non-steam)", style="rgb(253,224,71)")
+        t.append(" (non-steam)", style="rgb(255,252,190)")
         return t
     if not label.isascii() and label.endswith(")") and " (" in label:
         idx = label.rindex(" (")
@@ -132,7 +132,12 @@ def render_table(entries: list[GameEntry], page: int, steam_id: str) -> int:
 # edit detail screen
 def render_entry_details(entry: GameEntry) -> None:
     print(f"\n  {C.BOLD}{C.CYAN}{'─' * 56}{C.RESET}")
-    print(f"  {C.BOLD}Editing:{C.RESET}  {entry.label}")
+    if "[non-steam]" in entry.label:
+        _name = entry.label[: entry.label.index(" [non-steam]")]
+        _tag = f"\033[38;2;255;252;190m (non-steam){C.RESET}"
+    else:
+        _name, _tag = entry.label, ""
+    print(f"  {C.BOLD}Editing:{C.RESET}  {_name}{_tag}")
     print(f"  {C.BOLD}{C.CYAN}{'─' * 56}{C.RESET}\n")
     print(
         f"  [{C.YELLOW}T{C.RESET}]otal playtime   "

@@ -10,6 +10,7 @@ from core.display import (
     render_table,
 )
 from core.editor import parse_date, parse_playtime, write_field
+from core.exportimport import export_entries, import_entries
 from core.models import GameEntry
 from core.reader import STEAM_PATH, get_user_dirs, get_user_entries
 from core.ui import C, clear, getch, key_opt
@@ -95,6 +96,35 @@ def run_edit(user_dir: str, entry: GameEntry) -> None:
                         _save_err(str(e))
 
 
+def run_export(user_dir: str, steam_id: str, entries: list[GameEntry]) -> None:
+    clear()
+    try:
+        folder = export_entries(user_dir, steam_id, entries)
+        _save_ok(f"Exported {len(entries)} entries to  {folder}/")
+    except Exception as e:
+        _save_err(str(e))
+
+
+def run_import(user_dir: str) -> list[GameEntry] | None:
+    clear()
+    print(f"\n  {C.BOLD}Import from JSON{C.RESET}")
+    raw = _prompt("Path to playtime.json:")
+    path = raw.strip()
+    if not path:
+        return None
+    try:
+        count, errors = import_entries(user_dir, path)
+        for err in errors:
+            print(f"  {C.YELLOW}⚠  {err}{C.RESET}")
+        _save_ok(f"Imported {count} entries  (localconfig.vdf.bak created)")
+        steam_id = os.path.basename(user_dir)
+        _, entries, _ = get_user_entries(user_dir)
+        return entries
+    except Exception as e:
+        _save_err(str(e))
+        return None
+
+
 def run_pick_and_edit(
     user_dir: str, entries: list[GameEntry], page: int, steam_id: str
 ) -> None:
@@ -133,7 +163,7 @@ def run_user_view(
 
         total_pages = render_table(entries, page, steam_id)
 
-        opts = [key_opt("E", "dit")]
+        opts = [key_opt("E", "dit"), key_opt("X", "port"), key_opt("I", "mport")]
         if total_pages > 1:
             opts += [key_opt("←", ""), key_opt("→", " page")]
         opts.append(key_opt("Q", "uit"))
@@ -148,6 +178,12 @@ def run_user_view(
             return
         elif key == "e":
             run_pick_and_edit(user_dir, entries, page, steam_id)
+        elif key == "x":
+            run_export(user_dir, steam_id, entries)
+        elif key == "i":
+            refreshed = run_import(user_dir)
+            if refreshed is not None:
+                entries = refreshed
         elif key in ("right", "n"):
             page = min(page + 1, total_pages - 1)
         elif key in ("left", "p"):

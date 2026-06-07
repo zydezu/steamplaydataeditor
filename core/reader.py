@@ -13,11 +13,11 @@ STEAM_PATH = os.path.expanduser("~/.local/share/Steam")
 APPID_BLACKLIST = {"236600", "0"}
 
 
-def parse_shortcuts(path: str) -> dict[str, str]:
-    """Parse binary shortcuts.vdf -> { signed_appid_str: display_name }"""
+def parse_shortcuts(path: str) -> dict[str, tuple[str, int]]:
+    """Parse binary shortcuts.vdf -> { signed_appid_str: (display_name, last_play_time) }"""
     with open(path, "rb") as f:
         data = f.read()
-    shortcuts: dict[str, str] = {}
+    shortcuts: dict[str, tuple[str, int]] = {}
     offset = 0
     while offset < len(data):
         m = re.search(rb"\x01AppName\x00([^\x00]+)\x00", data[offset:])
@@ -29,7 +29,9 @@ def parse_shortcuts(path: str) -> dict[str, str]:
         if ai != -1:
             raw_id = struct.unpack_from("<I", data, ai + 6)[0]
             signed_id = raw_id - 2**32 if raw_id >= 2**31 else raw_id
-            shortcuts[str(signed_id)] = app_name
+            lpt = re.search(rb"\x02LastPlayTime\x00(.{4})", data[ai : ai + 2000])
+            last_play_time = struct.unpack_from("<I", lpt.group(1))[0] if lpt else 0
+            shortcuts[str(signed_id)] = (app_name, last_play_time)
         offset = abs_pos + len(m.group(0))
     return shortcuts
 
@@ -98,9 +100,10 @@ def get_user_entries(user_dir: str) -> tuple[str, list[GameEntry], list[str]]:
         if not playtime and not playtime_2wk:
             continue
 
-        shortcut_name = shortcut_names.get(appid)
-        if shortcut_name:
-            label = f"{shortcut_name} [non-steam]"
+        shortcut = shortcut_names.get(appid)
+        shortcut_last_played = shortcut[1] if shortcut else 0
+        if shortcut:
+            label = f"{shortcut[0]} [non-steam]"
         elif resolved := app_names.get(appid):
             label = resolved
         else:
@@ -112,7 +115,7 @@ def get_user_entries(user_dir: str) -> tuple[str, list[GameEntry], list[str]]:
                 appid=appid,
                 playtime=int(playtime or 0),
                 playtime_2wk=int(playtime_2wk or 0),
-                last_played=last_played or "0",
+                last_played=last_played if last_played and last_played != "0" else str(shortcut_last_played or 0),
             )
         )
 

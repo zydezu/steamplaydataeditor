@@ -22,7 +22,7 @@ A terminal UI for viewing and editing Steam playtime data stored in `localconfig
 pip install -r requirements.txt
 ```
 
-Or by using a virtual environment of your choice.
+Or, you can also use a virtual environment of your choice.
 
 ## Usage
 
@@ -30,4 +30,4 @@ Or by using a virtual environment of your choice.
 python main.py
 ```
 
-Navigate with number keys to select a game, then `T` / `W` / `L` to edit playtime fields. `Q` to quit.
+Follow on-screen instructions to navigate and edit game data. Use `Q` to quit.

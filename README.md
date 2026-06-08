@@ -1,6 +1,6 @@
 # Steam Play Data Editor
 
-<video alt="Video demonstration" src="https://github.com/user-attachments/assets/0f9e620f-4d4b-40e2-b2e4-009dcf4ecfa0"></video>
+https://github.com/user-attachments/assets/8518e879-10ed-4846-b4bc-4a8cd12c5768
 
 A terminal UI for viewing and editing Steam playtime data stored in `localconfig.vdf`, including added non-steam games.
 

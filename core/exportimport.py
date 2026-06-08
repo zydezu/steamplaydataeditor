@@ -7,7 +7,7 @@ import zipfile
 from core.models import GameEntry
 
 
-def export_entries(user_dir: str, steam_id: str, entries: list[GameEntry]) -> str:
+def export_entries(user_dir: str, steam_id: str, entries: list[GameEntry], out_path: str | None = None) -> str:
     """Write playtime.json + VDF backups into a zip. Returns the zip path."""
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     folder = f"steam_export_{steam_id}_{ts}"
@@ -35,7 +35,7 @@ def export_entries(user_dir: str, steam_id: str, entries: list[GameEntry]) -> st
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(folder, filename))
 
-    zip_path = folder + ".zip"
+    zip_path = out_path if out_path else folder + ".zip"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for fname in os.listdir(folder):
             zf.write(os.path.join(folder, fname), os.path.join(folder, fname))
@@ -56,10 +56,9 @@ def _load_json(path: str) -> dict:
         return json.load(f)
 
 
-def import_entries(user_dir: str, json_path: str) -> tuple[int, list[str]]:
-    """Apply playtime.json back to localconfig.vdf. Returns (updated_count, errors)."""
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+def import_entries(user_dir: str, path: str) -> tuple[int, list[str]]:
+    """Apply playtime.json (or zip containing one) to localconfig.vdf. Returns (updated_count, errors)."""
+    data = _load_json(path)
 
     from core.editor import bulk_write_entries
 

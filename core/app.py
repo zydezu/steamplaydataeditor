@@ -1,4 +1,6 @@
 import os
+import platform
+import subprocess
 import sys
 
 from core.display import (
@@ -96,13 +98,49 @@ def run_edit(user_dir: str, entry: GameEntry) -> None:
                         _save_err(str(e))
 
 
-def run_export(user_dir: str, steam_id: str, entries: list[GameEntry]) -> None:
+def _pick_save_path(default_name: str) -> str | None:
+    if platform.system() == "Linux":
+        try:
+            result = subprocess.run(
+                ["zenity", "--file-selection", "--save", "--confirm-overwrite",
+                 f"--filename={default_name}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+            )
+            return result.stdout.strip() or None
+        except FileNotFoundError:
+            pass
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        path = filedialog.asksaveasfilename(
+            initialfile=default_name,
+            defaultextension=".zip",
+            filetypes=[("Zip files", "*.zip"), ("All files", "*")],
+        )
+        root.destroy()
+        return path or None
+    except Exception:
+        return None
+
+
+def run_export(user_dir: str, steam_id: str, entries: list[GameEntry]) -> str | None:
+    import datetime
+    default = f"steam_export_{steam_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    out_path = _pick_save_path(default)
+    if out_path is None:
+        return None
     clear()
     try:
-        folder = export_entries(user_dir, steam_id, entries)
-        _save_ok(f"Exported {len(entries)} entries to  {folder}/")
+        export_entries(user_dir, steam_id, entries, out_path)
+        return f"Exported {len(entries)} entries to  {os.path.basename(out_path)}"
     except Exception as e:
         _save_err(str(e))
+        return None
 
 
 def run_import(user_dir: str) -> list[GameEntry] | None:
@@ -154,6 +192,7 @@ def run_user_view(
     user_dir: str, steam_id: str, entries: list[GameEntry], errors: list[str]
 ) -> None:
     page = 0
+    flash: str | None = None
 
     while True:
         clear()
@@ -170,6 +209,9 @@ def run_user_view(
 
         print(f"\n  {C.BOLD}What would you like to do?{C.RESET}")
         print("  " + "   ".join(opts))
+        if flash:
+            print(f"  {C.GREEN}✓  {flash}{C.RESET}")
+            flash = None
         print(f"  {C.GRAY}Press the corresponding key{C.RESET}", end="", flush=True)
 
         key = getch()
@@ -179,7 +221,7 @@ def run_user_view(
         elif key == "e":
             run_pick_and_edit(user_dir, entries, page, steam_id)
         elif key == "x":
-            run_export(user_dir, steam_id, entries)
+            flash = run_export(user_dir, steam_id, entries)
         elif key == "i":
             refreshed = run_import(user_dir)
             if refreshed is not None:

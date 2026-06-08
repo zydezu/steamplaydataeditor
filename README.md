@@ -2,7 +2,10 @@
 
 https://github.com/user-attachments/assets/8518e879-10ed-4846-b4bc-4a8cd12c5768
 
-A terminal UI for viewing and editing Steam playtime data stored in `localconfig.vdf`, including added non-steam games.
+A terminal UI for viewing playtime data stored in `localconfig.vdf`, you can edit playtime data for any non-steam games.
+
+> [!WARNING]
+> It is recommended to use this application whilst Steam is closed, otherwise your changes may be overwritten by Steam.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/boysaremoe)
 

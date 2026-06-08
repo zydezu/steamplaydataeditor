@@ -111,6 +111,16 @@ def _pick_save_path(default_name: str) -> str | None:
             return result.stdout.strip() or None
         except FileNotFoundError:
             pass
+        try:
+            result = subprocess.run(
+                ["kdialog", "--getsavefilename", default_name, "*.zip"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+            )
+            return result.stdout.strip() or None
+        except FileNotFoundError:
+            pass
     try:
         import tkinter as tk
         from tkinter import filedialog
